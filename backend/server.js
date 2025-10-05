@@ -14,7 +14,20 @@ const startServer = async () => {
     await connectDB();
 
     // 2. Set up middleware after the connection is successful
-    app.use(cors());
+
+    // --- START OF CORRECTION ---
+
+    // Create a specific CORS configuration to trust only your live frontend
+    const corsOptions = {
+      origin: "https://alzheimer-analysis-app-1.onrender.com", // Your frontend URL
+      optionsSuccessStatus: 200 // For legacy browser support
+    };
+    
+    // Use the specific CORS options
+    app.use(cors(corsOptions));
+
+    // --- END OF CORRECTION ---
+
     app.use(express.json());
 
     // Define Routes
@@ -24,7 +37,7 @@ const startServer = async () => {
     app.get('/', (req, res) => res.send('API is running...'));
 
     // 3. Start listening for requests only after everything is ready
-    app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+    app.listen(PORT, () => console.log(`✅ Server is running on port: ${PORT}`));
 
   } catch (error) {
     console.error('Failed to connect to the database', error);
