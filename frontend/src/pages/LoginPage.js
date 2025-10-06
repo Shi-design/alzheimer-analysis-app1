@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import { loginUser } from "../services/authService"; // <-- Import the function
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -12,29 +12,26 @@ const LoginPage = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        formData
-      );
-      localStorage.setItem("token", res.data.token);
+      // Use the clean function from your service file
+      const data = await loginUser(formData);
+      
+      localStorage.setItem("token", data.token);
       alert("Login successful!");
       navigate("/details");
     } catch (err) {
-      alert(
-        "Error: " +
-          (err.response?.data?.msg || "Please check your credentials.")
-      );
+      const errorMessage = err.response?.data?.msg || "Please check your credentials.";
+      alert(`Error: ${errorMessage}`);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-4">
-      <div className="w-full max-w-6xl bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden grid grid-cols-2">
+      <div className="w-full max-w-6xl bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden grid md:grid-cols-2">
         
-        {/* === LEFT SIDE (Photo + Branding) === */}
-        <div className="flex flex-col items-center justify-center p-12 bg-gradient-to-br from-indigo-800 to-purple-900 text-white text-center">
+        {/* === LEFT SIDE (Branding) === */}
+        <div className="hidden md:flex flex-col items-center justify-center p-12 bg-gradient-to-br from-indigo-800 to-purple-900 text-white text-center">
           <img
-            src="/images/neuro-art.jpg"
+            src="https://placehold.co/400x300/6366f1/ffffff?text=NeuroArt"
             alt="NeuroAssess Art"
             className="w-full max-w-sm rounded-lg shadow-xl mb-8"
           />
@@ -68,6 +65,7 @@ const LoginPage = () => {
               <input
                 type="email"
                 name="email"
+                value={formData.email}
                 onChange={onChange}
                 required
                 className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -84,6 +82,7 @@ const LoginPage = () => {
               <input
                 type="password"
                 name="password"
+                value={formData.password}
                 onChange={onChange}
                 required
                 className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
