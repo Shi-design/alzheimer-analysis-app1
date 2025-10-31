@@ -7,7 +7,7 @@ services:
     name: alz-frontend
     rootDir: frontend
     buildCommand: "npm install && npm run build"
-    staticPublishPath: build        # use 'dist' if Vite
+    staticPublishPath: build          # change to 'dist' if Vite
     autoDeploy: true
     envVars:
       - key: REACT_APP_API_URL
@@ -45,9 +45,6 @@ services:
           name: alz-ml-api
           type: web
           property: url
-    disk:
-      name: uploads
-      mountPath: /opt/render/project/src/uploads
 
   # ==========================
   # 🧠 ML API (Flask + TensorFlow)
@@ -64,10 +61,3 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.10"
-
-# ==========================
-# 💾 Declare volumes (disks) here
-# ==========================
-volumes:
-  - name: uploads
-    sizeGB: 1
