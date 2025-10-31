@@ -11,10 +11,7 @@ services:
     autoDeploy: true
     envVars:
       - key: REACT_APP_API_URL
-        fromService:
-          name: alz-backend
-          type: web
-          property: url
+        sync: false                   # set manually after backend URL is known
 
   # ==========================
   # ⚙️ BACKEND (Node/Express)
@@ -32,19 +29,13 @@ services:
       - key: NODE_VERSION
         value: "18"
       - key: MONGODB_URI
-        sync: false
+        sync: false                   # set manually
       - key: JWT_SECRET
-        sync: false
-      - key: FRONTEND_ORIGIN
-        fromService:
-          name: alz-frontend
-          type: web
-          property: url
+        sync: false                   # set manually
       - key: ML_API_URL
-        fromService:
-          name: alz-ml-api
-          type: web
-          property: url
+        sync: false                   # set manually after ML API URL is known
+      - key: FRONTEND_ORIGIN
+        sync: false                   # optional; set to frontend URL for strict CORS
 
   # ==========================
   # 🧠 ML API (Flask + TensorFlow)
