@@ -47,6 +47,7 @@ services:
           property: url
     disk:
       name: uploads
+      mountPath: /opt/render/project/src/uploads
 
   # ==========================
   # 🧠 ML API (Flask + TensorFlow)
@@ -65,9 +66,8 @@ services:
         value: "3.10"
 
 # ==========================
-# 💾 Persistent Disk (uploads folder)
+# 💾 Declare volumes (disks) here
 # ==========================
-persistentDisks:
+volumes:
   - name: uploads
-    mountPath: /opt/render/project/src/uploads
     sizeGB: 1
