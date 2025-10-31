@@ -1,46 +1,39 @@
-const express = require('express');
-const cors = require('cors'); // Make sure cors is required
-const connectDB = require('./config/db');
 require('dotenv').config();
-
-// Define allowed origins
-const allowedOrigins = [
-  'http://localhost:3000', // For local development
-  process.env.FRONTEND_URL // For your live Render URL
-];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
-};
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
+const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+app.use(express.json());
 
-const startServer = async () => {
+// CORS: allow your Render static site + local dev
+const allowed = [
+  process.env.FRONTEND_ORIGIN,       // set from Render to the static site URL
+  'http://localhost:3000',
+  'http://localhost:5173'
+].filter(Boolean);
+app.use(cors({ origin: allowed, credentials: true }));
+
+// Health check for Render
+app.get('/healthz', (req, res) => res.send('ok'));
+
+// Example: forward analysis upload to ML API (adjust to your real routes)
+const ML_API_URL = process.env.ML_API_URL; // Render will inject this
+app.post('/api/analysis/upload', async (req, res) => {
   try {
-    await connectDB();
-    
-    // Use the detailed CORS options
-    app.use(cors(corsOptions)); 
-    
-    app.use(express.json());
-
-    // ... (rest of your server.js file) ...
-    // Define Routes
-    app.use('/api/auth', require('./routes/authRoutes'));
-    app.use('/api/analysis', require('./routes/analysisRoutes'));
-    
-    app.listen(PORT, () => console.log(`🚀 Server running on port: ${PORT}`));
-  } catch (error) {
-    console.error('Failed to start server', error);
-    process.exit(1);
+    // If you currently use multer for file uploads, keep that as-is,
+    // then forward the file buffer/form-data to ML_API_URL.
+    // This is just a placeholder to show the pattern:
+    const resp = await axios.post(`${ML_API_URL}/analyze`, req.body);
+    res.json(resp.data);
+  } catch (e) {
+    console.error(e?.response?.data || e.message);
+    res.status(500).json({ error: 'ML analysis failed' });
   }
-};
+});
 
-startServer();
+// …your existing routes…
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Backend listening on ${PORT}`));

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { loginUser } from "../services/authService"; // <-- Import the function
+import axios from "axios";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -12,99 +12,61 @@ const LoginPage = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Use the clean function from your service file
-      const data = await loginUser(formData);
-      
-      localStorage.setItem("token", data.token);
-      alert("Login successful!");
-      navigate("/details");
+      const res = await axios.post("http://localhost:5000/api/auth/login", formData);
+      localStorage.setItem("token", res.data.token);
+      alert("✅ Login successful!");
+      navigate("/details"); // 👈 redirects to your DetailsPage
     } catch (err) {
-      const errorMessage = err.response?.data?.msg || "Please check your credentials.";
-      alert(`Error: ${errorMessage}`);
+      console.error("Login Error:", err.response?.data);
+      alert("❌ " + (err.response?.data?.msg || "Login failed. Check credentials."));
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-4">
-      <div className="w-full max-w-6xl bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden grid md:grid-cols-2">
-        
-        {/* === LEFT SIDE (Branding) === */}
+      <div className="w-full max-w-6xl bg-white/90 rounded-2xl shadow-2xl overflow-hidden grid md:grid-cols-2">
         <div className="hidden md:flex flex-col items-center justify-center p-12 bg-gradient-to-br from-indigo-800 to-purple-900 text-white text-center">
           <img
-            src="https://placehold.co/400x300/6366f1/ffffff?text=NeuroArt"
-            alt="NeuroAssess Art"
-            className="w-full max-w-sm rounded-lg shadow-xl mb-8"
+            src="/images/neuro-art.jpg"
+            alt="NeuroAssess"
+            className="w-full max-w-sm rounded-xl mb-8"
           />
-          <h1 className="text-4xl font-extrabold tracking-tight mb-3">
-            NeuroAssess
-          </h1>
-          <p className="text-xl font-light text-purple-200">
-            Advanced Early Detection Platform
-          </p>
+          <h1 className="text-4xl font-extrabold">NeuroAssess</h1>
+          <p className="text-xl font-light text-purple-200">Early Detection Platform</p>
         </div>
 
-        {/* === RIGHT SIDE (Login Form) === */}
         <div className="p-8 sm:p-12 flex flex-col justify-center">
-          <div className="text-center lg:text-left mb-8">
-            <h2 className="text-4xl font-extrabold text-gray-800 mb-2">
-              Welcome Back
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Please sign in to access your assessment system.
-            </p>
-          </div>
+          <h2 className="text-4xl font-extrabold text-gray-800 mb-2">Welcome Back</h2>
+          <p className="text-gray-600 text-lg mb-6">Sign in to continue.</p>
 
-          <form onSubmit={onSubmit} className="space-y-6 max-w-sm mx-auto lg:mx-0">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-base font-medium text-gray-700"
-              >
-                Email Address
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={onChange}
-                required
-                className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Enter your email"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-base font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={onChange}
-                required
-                className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Enter your password"
-              />
-            </div>
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 transition-all"
-              >
-                Sign In to NeuroAssess
-              </button>
-            </div>
+          <form onSubmit={onSubmit} className="space-y-6 max-w-sm mx-auto">
+            <input
+              type="email"
+              name="email"
+              onChange={onChange}
+              placeholder="Email Address"
+              required
+              className="block w-full px-4 py-3 border border-gray-300 rounded-lg"
+            />
+            <input
+              type="password"
+              name="password"
+              onChange={onChange}
+              placeholder="Password"
+              required
+              className="block w-full px-4 py-3 border border-gray-300 rounded-lg"
+            />
+            <button
+              type="submit"
+              className="w-full py-3 bg-indigo-700 text-white font-bold rounded-lg"
+            >
+              Sign In
+            </button>
           </form>
 
-          <p className="text-center text-gray-500 mt-8 text-sm max-w-sm mx-auto lg:mx-0">
+          <p className="text-center text-gray-500 mt-6">
             Need an account?{" "}
-            <Link
-              to="/signup"
-              className="font-semibold text-indigo-600 hover:text-indigo-800"
-            >
+            <Link to="/signup" className="text-indigo-600 font-semibold">
               Sign Up
             </Link>
           </p>

@@ -1,0 +1,66 @@
+services:
+  # ==========================
+  # 🌐 FRONTEND (React + Tailwind)
+  # ==========================
+  - type: static
+    name: alz-frontend
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: build     # or 'dist' if using Vite
+    autoDeploy: true
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          name: alz-backend
+          type: web
+          property: url
+
+  # ==========================
+  # ⚙️ BACKEND (Node + Express + Mongo)
+  # ==========================
+  - type: web
+    name: alz-backend
+    env: node
+    rootDir: backend
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    autoDeploy: true
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: MONGODB_URI
+        sync: false         # you'll set this manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false         # set manually in Render dashboard
+      - key: FRONTEND_ORIGIN
+        fromService:
+          name: alz-frontend
+          type: static
+          property: url
+      - key: ML_API_URL
+        fromService:
+          name: alz-ml-api
+          type: web
+          property: url
+    disks:
+      - name: uploads
+        mountPath: /opt/render/project/src/uploads
+        sizeGB: 1
+
+  # ==========================
+  # 🧠 ML API (Flask + TensorFlow + Audio)
+  # ==========================
+  - type: web
+    name: alz-ml-api
+    env: python
+    rootDir: ml-api
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 180"
+    autoDeploy: true
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10
