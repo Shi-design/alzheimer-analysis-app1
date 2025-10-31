@@ -2,11 +2,11 @@ services:
   # ==========================
   # 🌐 FRONTEND (React + Tailwind)
   # ==========================
-  - type: static
+  - type: static_site
     name: alz-frontend
     rootDir: frontend
     buildCommand: "npm install && npm run build"
-    staticPublishPath: build     # or 'dist' if using Vite
+    staticPublishPath: build     # change to 'dist' if Vite
     autoDeploy: true
     envVars:
       - key: REACT_APP_API_URL
@@ -29,15 +29,15 @@ services:
     healthCheckPath: /healthz
     envVars:
       - key: NODE_VERSION
-        value: 18
+        value: "18"
       - key: MONGODB_URI
-        sync: false         # you'll set this manually in Render dashboard
+        sync: false
       - key: JWT_SECRET
-        sync: false         # set manually in Render dashboard
+        sync: false
       - key: FRONTEND_ORIGIN
         fromService:
           name: alz-frontend
-          type: static
+          type: static_site
           property: url
       - key: ML_API_URL
         fromService:
@@ -50,7 +50,7 @@ services:
         sizeGB: 1
 
   # ==========================
-  # 🧠 ML API (Flask + TensorFlow + Audio)
+  # 🧠 ML API (Flask + TensorFlow)
   # ==========================
   - type: web
     name: alz-ml-api
@@ -63,4 +63,4 @@ services:
     healthCheckPath: /healthz
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10
+        value: "3.10"
