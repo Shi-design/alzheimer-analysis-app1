@@ -13,7 +13,7 @@ services:
       - key: REACT_APP_API_URL
         fromService:
           name: alz-backend
-          type: web                 # static sites are still 'web' services for refs
+          type: web
           property: url
 
   # ==========================
@@ -38,17 +38,15 @@ services:
       - key: FRONTEND_ORIGIN
         fromService:
           name: alz-frontend
-          type: web                  # reference the static site's URL
+          type: web
           property: url
       - key: ML_API_URL
         fromService:
           name: alz-ml-api
           type: web
           property: url
-    disks:
-      - name: uploads
-        mountPath: /opt/render/project/src/uploads
-        sizeGB: 1
+    disk:
+      name: uploads
 
   # ==========================
   # 🧠 ML API (Flask + TensorFlow)
@@ -65,3 +63,11 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.10"
+
+# ==========================
+# 💾 Persistent Disk (uploads folder)
+# ==========================
+persistentDisks:
+  - name: uploads
+    mountPath: /opt/render/project/src/uploads
+    sizeGB: 1
