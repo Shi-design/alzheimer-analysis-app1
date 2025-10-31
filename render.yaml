@@ -1,26 +1,27 @@
 services:
   # ==========================
-  # 🌐 FRONTEND (React + Tailwind)
+  # 🌐 FRONTEND (React)
   # ==========================
-  - type: static_site
+  - type: web
+    runtime: static
     name: alz-frontend
     rootDir: frontend
     buildCommand: "npm install && npm run build"
-    staticPublishPath: build     # change to 'dist' if Vite
+    staticPublishPath: build        # use 'dist' if Vite
     autoDeploy: true
     envVars:
       - key: REACT_APP_API_URL
         fromService:
           name: alz-backend
-          type: web
+          type: web                 # static sites are still 'web' services for refs
           property: url
 
   # ==========================
-  # ⚙️ BACKEND (Node + Express + Mongo)
+  # ⚙️ BACKEND (Node/Express)
   # ==========================
   - type: web
+    runtime: node
     name: alz-backend
-    env: node
     rootDir: backend
     plan: free
     buildCommand: "npm install"
@@ -37,7 +38,7 @@ services:
       - key: FRONTEND_ORIGIN
         fromService:
           name: alz-frontend
-          type: static_site
+          type: web                  # reference the static site's URL
           property: url
       - key: ML_API_URL
         fromService:
@@ -53,8 +54,8 @@ services:
   # 🧠 ML API (Flask + TensorFlow)
   # ==========================
   - type: web
+    runtime: python
     name: alz-ml-api
-    env: python
     rootDir: ml-api
     plan: free
     buildCommand: "pip install -r requirements.txt"
