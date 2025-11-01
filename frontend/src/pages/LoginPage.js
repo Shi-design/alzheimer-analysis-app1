@@ -26,12 +26,13 @@ export default function LoginPage() {
         {/* This is the part from your screenshot with the image */}
         <div className="hidden md:flex flex-col items-center justify-center p-12 bg-gradient-to-br from-indigo-800 to-purple-900 text-white text-center">
           
-          {/* You can use your image here, e.g., "/images/your-art.png"
-            I'm using a placeholder to guarantee the build works.
+          {/* Here is your image! 
+            The path '/images/neuro-art.jpg' works because the 'images' folder 
+            is inside the 'public' directory.
           */}
           <img 
-            src="https://placehold.co/400x400/6366f1/ffffff?text=NeuroAssess" 
-            alt="NeuroAssess" 
+            src="/images/neuro-art.jpg" 
+            alt="NeuroAssess Art" 
             className="w-full max-w-sm rounded-xl mb-8" 
           />
           <h1 className="text-4xl font-extrabold">NeuroAssess</h1>
@@ -55,6 +56,7 @@ export default function LoginPage() {
               name="name" 
               type="text" 
               value={name} 
+              // This is the corrected line
               onChange={(e) => setName(e.target.value)} 
               placeholder="Your Name" 
               required 
@@ -75,4 +77,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
