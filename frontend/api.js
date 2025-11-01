@@ -10,14 +10,15 @@ const api = axios.create({
   withCredentials: false,
 });
 
-// ---- Auth endpoints (must match backend) ----
-export const signupUser = (payload) => api.post('/api/auth/signup', payload);
-export const loginUser = (payload) => api.post('/api/auth/login', payload);
+// ---- Auth endpoints removed ----
+// We've removed signupUser and loginUser since they are no longer needed.
 
 // ---- Analysis endpoint (multipart) ----
+// We keep this function for your UploadPage
 export const uploadAnalysisImage = (formData) =>
   api.post('/api/analysis/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 
 export default api;
+

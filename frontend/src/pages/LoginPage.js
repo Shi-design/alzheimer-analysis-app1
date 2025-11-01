@@ -1,49 +1,38 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-// I've added the .js extension here as a safeguard for Linux build systems.
-import { loginUser } from '../api.js';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(''); // Use state for errors
   const navigate = useNavigate();
 
-  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const onSubmit = async (e) => {
+  const onSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(''); // Clear previous errors
-    try {
-      const { data } = await loginUser(form);
-      console.log('Login OK:', data);
-      if (data?.token) localStorage.setItem('token', data.token);
-
-      // Don't use alert(). It's blocking. A simple success message or redirect is better.
-      navigate('/details'); // next step
-    } catch (err) {
-      const msg =
-        err?.response?.data?.error ||
-        err?.response?.data?.message ||
-        err.message ||
-        'Login failed. Check credentials.';
-      console.error('Login Error:', err?.response?.data || err);
-      setError(msg); // Set the error state to display it
-    } finally {
-      setLoading(false);
-    }
+    // Save the name in localStorage so other pages can use it
+    localStorage.setItem('participantName', name);
+    // Go to the next step (the DetailsPage)
+    navigate('/details'); 
   };
 
   return (
+    // This is the outer container that centers everything
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-4">
+      
+      {/* This is the white card with the 2-column grid */}
       <div className="w-full max-w-6xl bg-white/90 rounded-2xl shadow-2xl overflow-hidden grid md:grid-cols-2">
+
+        {/* ----- 1. LEFT PANEL (Image & Title) ----- */}
+        {/* This is the part from your screenshot with the image */}
         <div className="hidden md:flex flex-col items-center justify-center p-12 bg-gradient-to-br from-indigo-800 to-purple-900 text-white text-center">
-          {/* Using a placeholder for the image to ensure it builds */}
-          <img
-            src="https://placehold.co/400x300/6366f1/ffffff?text=NeuroAssess"
-            alt="NeuroAssess"
-            className="w-full max-w-sm rounded-xl mb-8"
+          
+          {/* You can use your image here, e.g., "/images/your-art.png"
+            I'm using a placeholder to guarantee the build works.
+          */}
+          <img 
+            src="https://placehold.co/400x400/6366f1/ffffff?text=NeuroAssess" 
+            alt="NeuroAssess" 
+            className="w-full max-w-sm rounded-xl mb-8" 
           />
           <h1 className="text-4xl font-extrabold">NeuroAssess</h1>
           <p className="text-xl font-light text-purple-200">
@@ -51,52 +40,39 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* ----- 2. RIGHT PANEL (The Form) ----- */}
+        {/* This is the part with the form, but simplified to only ask for a name */}
         <div className="p-8 sm:p-12 flex flex-col justify-center">
           <h2 className="text-4xl font-extrabold text-gray-800 mb-2">
-            Welcome Back
+            Welcome!
           </h2>
-          <p className="text-gray-600 text-lg mb-6">Sign in to continue.</p>
+          <p className="text-gray-600 text-lg mb-6">
+            Enter your name to begin the assessment.
+          </p>
 
           <form onSubmit={onSubmit} className="space-y-6 max-w-sm mx-auto w-full">
-            <input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={onChange}
-              placeholder="Email Address"
-              required
-              className="block w-full px-4 py-3 border border-gray-300 rounded-lg"
+            <input 
+              name="name" 
+              type="text" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              placeholder="Your Name" 
+              required 
+              className="block w-full px-4 py-3 border border-gray-300 rounded-lg" 
             />
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={onChange}
-              placeholder="Password"
-              required
-              className="block w-full px-4 py-3 border border-gray-300 rounded-lg"
-            />
-            {/* Display the error message */}
-            {error && (
-              <p className="text-red-600 text-sm text-center">{error}</p>
-            )}
-            <button
-              type="submit"
-              className="w-full py-3 bg-indigo-700 text-white font-bold rounded-lg hover:bg-indigo-800 transition-colors disabled:bg-gray-400"
+            <button 
+              type="submit" 
+              className="w-full py-3 bg-indigo-700 text-white font-bold rounded-lg hover:bg-indigo-800 transition-colors disabled:bg-gray-400" 
               disabled={loading}
             >
-              {loading ? 'Signing in…' : 'Sign In'}
+              {loading ? 'Starting…' : 'Start Assessment'}
             </button>
           </form>
-
-          <p className="text-center text-gray-500 mt-6">
-            Need an account?{' '}
-            <Link to="/signup" className="text-indigo-600 font-semibold">
-              Sign Up
-            </Link>
-          </p>
+          {/* We have removed the "Sign In" link */}
         </div>
+
       </div>
     </div>
   );
 }
+
