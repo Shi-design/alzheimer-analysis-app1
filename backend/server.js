@@ -15,7 +15,7 @@ const app = express();
 
 /* ------------------------- CORS ------------------------- */
 const allowedOrigins = [
-  process.env.FRONTEND_ORIGIN,   // e.g. https://alz-frontend.onrender.com
+  process.env.FRONTEND_ORIGIN,          // e.g. https://alz-frontend.onrender.com
   'http://localhost:3000',
   'http://localhost:5173',
 ].filter(Boolean);
@@ -26,29 +26,37 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 };
+
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// ✅ Express 5-safe generic preflight handler (instead of app.options('*', ...))
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
 /* --------------------- Body Parsers --------------------- */
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 /* --------------------- Health Routes -------------------- */
+// Server liveness
 app.get('/', (_req, res) => res.send('✅ Alzheimer API is running'));
+// Simple health
 app.get('/healthz', (_req, res) => res.send('ok'));
+// DB readiness (1 = connected)
 app.get('/health/db', (_req, res) =>
-  res.json({ readyState: mongoose.connection.readyState }) // 1 = connected
+  res.json({ readyState: mongoose.connection.readyState })
 );
 
 /* --------------------- API Routers ---------------------- */
-// Auth (uses routes/authRoutes.js and models/userModel.js)
+// Auth routes
 try {
   app.use('/api/auth', require('./routes/authRoutes'));
 } catch (e) {
   console.warn('⚠️ ./routes/authRoutes.js not found; skipping auth routes.');
 }
 
-// Optional analysis routes if you have them
+// Optional analysis routes
 try {
   app.use('/api/analysis', require('./routes/analysisRoutes'));
 } catch (e) {
@@ -57,8 +65,8 @@ try {
 
 /* -------- Upload → forward to Flask ML API -------------- */
 /**
- * Expects form-data:
- *  - mri:   file
+ * Expects multipart/form-data:
+ *  - mri: file
  *  - voice: file
  *  - quizScore: number (string)
  */
@@ -70,7 +78,7 @@ if (!ML_API_URL) {
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
-const storage = multer.memoryStorage(); // keep files in memory (free plan has no persistent disk)
+const storage = multer.memoryStorage(); // keep files in memory (no persistent disk on free plan)
 const upload = multer({ storage });
 
 app.post(

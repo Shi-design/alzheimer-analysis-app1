@@ -1,33 +1,24 @@
+// src/api.js
 import axios from 'axios';
 
-// Create an instance of axios with the base URL from your .env file
-const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+// 🔎 See it in the browser console after deploy
+console.log('REACT_APP_API_URL =', process.env.REACT_APP_API_URL);
+
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL, // e.g. https://alz-backend-xxxx.onrender.com
+  headers: { 'Content-Type': 'application/json' },
+  // If you don't use cookies, keep this false
+  withCredentials: false,
 });
 
-// --- AUTHENTICATION CALLS ---
+// ---- Auth endpoints (must match backend) ----
+export const signupUser = (payload) => api.post('/api/auth/signup', payload);
+export const loginUser  = (payload) => api.post('/api/auth/login', payload);
 
-// Function to handle user login
-export const loginUser = (credentials) => {
-  return apiClient.post('/api/auth/login', credentials);
-};
-
-// Function to handle user signup
-export const signupUser = (userData) => {
-  return apiClient.post('/api/auth/signup', userData);
-};
-
-// --- ANALYSIS CALLS ---
-
-// Function to upload an image for analysis
-export const uploadAnalysisImage = (formData) => {
-  // For file uploads, we need to change the header
-  return apiClient.post('/api/analysis/upload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+// ---- Analysis endpoint (multipart) ----
+export const uploadAnalysisImage = (formData) =>
+  api.post('/api/analysis/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
-};
+
+export default api;
