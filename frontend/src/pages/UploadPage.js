@@ -2,6 +2,18 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 
+// Decide API base once, at module load
+const API_BASE =
+  // CRA build-time var (Render -> REACT_APP_API_URL)
+  process.env.REACT_APP_API_URL ||
+  // Vite fallback if you ever switch
+  (import.meta?.env?.VITE_API_BASE) ||
+  // If running on Render (production) and env var missing, hardcode backend URL
+  (typeof window !== "undefined" &&
+  window.location.hostname.includes("onrender.com")
+    ? "https://alz-backend-drxj.onrender.com"
+    : "http://localhost:5000"); // local dev
+
 const UploadPage = () => {
   const [mriFile, setMriFile] = useState(null);
   const [audioFile, setAudioFile] = useState(null);
@@ -9,7 +21,7 @@ const UploadPage = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { quizScore } = location.state || { quizScore: 0 };
+  const quizScore = location.state?.quizScore ?? 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,23 +39,32 @@ const UploadPage = () => {
       formData.append("voice", audioFile);
       formData.append("quizScore", quizScore);
 
-      // ✅ Correct endpoint, no manual Content-Type
-      const response = await axios.post(
-        "http://localhost:5000/api/analysis/upload",
-        formData,
-        { timeout: 120000 }
-      );
+      const url = `${API_BASE}/api/analysis/upload`;
+      console.log("[Upload] POST", url);
+
+      const response = await axios.post(url, formData, {
+        // Let axios set the multipart boundary automatically
+        timeout: 120000,
+        withCredentials: false,
+      });
 
       console.log("✅ Analysis success:", response.data);
 
-      if (response.data.results) {
-        navigate("/results", { state: { results: response.data.results } });
+      // Accept either {results: {...}} or {result: {...}}
+      const results = response.data?.results || response.data?.result;
+      if (results) {
+        navigate("/results", { state: { results } });
       } else {
-        alert("Unexpected response format. Please try again.");
+        alert("Unexpected response from server.");
       }
     } catch (err) {
-      console.error("❌ Upload or analysis error:", err.response?.data || err.message);
-      alert("Analysis failed. Please try again.");
+      const msg =
+        err.response?.data?.error ||
+        err.response?.data?.details ||
+        err.message ||
+        "Network error";
+      console.error("❌ Upload/analysis error:", err.response?.status, msg);
+      alert(`Analysis failed: ${msg}`);
     } finally {
       setStatus("");
     }
@@ -71,7 +92,7 @@ const UploadPage = () => {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setMriFile(e.target.files[0])}
+              onChange={(e) => setMriFile(e.target.files?.[0] || null)}
               required
               className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 hover:file:bg-blue-200 cursor-pointer"
             />
@@ -88,7 +109,7 @@ const UploadPage = () => {
             <input
               type="file"
               accept="audio/*"
-              onChange={(e) => setAudioFile(e.target.files[0])}
+              onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
               required
               className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-100 hover:file:bg-green-200 cursor-pointer"
             />
@@ -103,6 +124,9 @@ const UploadPage = () => {
             >
               {status || "Get Analysis Results"}
             </button>
+            <p className="mt-2 text-xs text-gray-400 text-center">
+              Using API: {API_BASE}
+            </p>
           </div>
         </form>
       </div>
