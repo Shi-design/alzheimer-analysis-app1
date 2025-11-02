@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// frontend/src/pages/UploadPage.jsx
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -23,6 +24,11 @@ const UploadPage = () => {
   const navigate = useNavigate();
   const quizScore = location.state?.quizScore ?? 0;
 
+  // Optional: warm up ML API when page loads (harmless if already warm)
+  useEffect(() => {
+    axios.get(`${API_BASE}/ping-ml`, { timeout: 12000 }).catch(() => {});
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -31,8 +37,14 @@ const UploadPage = () => {
       return;
     }
 
-    setStatus("Analyzing...");
+    setStatus("Warming up service...");
+    try {
+      await axios.get(`${API_BASE}/ping-ml`, { timeout: 12000 });
+    } catch {
+      // not fatal; continue anyway
+    }
 
+    setStatus("Analyzing...");
     try {
       const formData = new FormData();
       formData.append("mri", mriFile);
@@ -44,7 +56,7 @@ const UploadPage = () => {
 
       const response = await axios.post(url, formData, {
         // Let axios set the multipart boundary automatically
-        timeout: 120000,
+        timeout: 180000, // 3 minutes
         withCredentials: false,
       });
 
@@ -119,7 +131,7 @@ const UploadPage = () => {
           <div>
             <button
               type="submit"
-              disabled={status === "Analyzing..."}
+              disabled={status === "Analyzing..." || status === "Warming up service..."}
               className="w-full text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 font-bold rounded-lg text-lg px-5 py-3 text-center transition-transform transform hover:scale-105"
             >
               {status || "Get Analysis Results"}

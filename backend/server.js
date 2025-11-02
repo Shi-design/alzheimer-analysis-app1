@@ -1,11 +1,10 @@
+// backend/server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const FormData = require("form-data");
 const axios = require("axios");
-const path = require("path");
-const fs = require("fs");
 const { connectDB, mongoose } = require("./config/db");
 
 const app = express();
@@ -13,6 +12,7 @@ const app = express();
 /* ---------------- CORS ---------------- */
 const allowedOrigins = [
   process.env.FRONTEND_ORIGIN || "http://localhost:3000",
+  "http://localhost:5173",
 ].filter(Boolean);
 
 app.use(
@@ -20,16 +20,15 @@ app.use(
     origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
-
 app.use((req, res, next) => {
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
 
-/* ---------------- Body Parser ---------------- */
+/* ---------------- Body Parsers ---------------- */
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -40,10 +39,22 @@ app.get("/health/db", (_req, res) =>
   res.json({ readyState: mongoose.connection.readyState })
 );
 
-/* ---------------- Upload Route ---------------- */
+/* ---------------- ML API ---------------- */
 const ML_API_URL = process.env.ML_API_URL || "";
 if (!ML_API_URL) console.warn("⚠️ ML_API_URL not set. Requests will fail.");
 
+// Wake the ML service (helps on Render Free cold starts)
+app.get("/ping-ml", async (_req, res) => {
+  try {
+    const r = await axios.get(`${ML_API_URL}/healthz`, { timeout: 8000 });
+    res.json({ ok: true, ml: r.data });
+  } catch (e) {
+    console.error("ping-ml failed:", e.message);
+    res.status(503).json({ ok: false, error: e.message });
+  }
+});
+
+/* ---------------- Upload Route ---------------- */
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -55,12 +66,17 @@ app.post(
   ]),
   async (req, res) => {
     try {
+      // Keep the Node connection open long enough for ML cold start
+      req.setTimeout?.(180000); // 3 minutes
+      res.setTimeout?.(180000);
+
       const mri = req.files?.mri?.[0];
       const voice = req.files?.voice?.[0];
-      if (!mri || !voice)
+      if (!mri || !voice) {
         return res
           .status(400)
           .json({ error: "Both MRI and voice files are required." });
+      }
 
       const quizScore = req.body.quizScore ?? "0";
 
@@ -75,10 +91,12 @@ app.post(
       });
       fd.append("quizScore", quizScore);
 
+      // Give Flask enough time; allow large bodies
       const response = await axios.post(`${ML_API_URL}/analyze`, fd, {
         headers: fd.getHeaders(),
         maxBodyLength: Infinity,
         maxContentLength: Infinity,
+        timeout: 180000, // 3 minutes
       });
 
       return res.status(200).json(response.data);
