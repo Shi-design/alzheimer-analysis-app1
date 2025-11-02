@@ -21,20 +21,17 @@ const UploadPage = () => {
 
     setStatus("Analyzing...");
 
-    const formData = new FormData();
-    formData.append("mri", mriFile);
-    formData.append("voice", audioFile);
-    formData.append("quizScore", quizScore);
-
     try {
+      const formData = new FormData();
+      formData.append("mri", mriFile);
+      formData.append("voice", audioFile);
+      formData.append("quizScore", quizScore);
+
+      // ✅ Correct endpoint, no manual Content-Type
       const response = await axios.post(
-        "http://localhost:5000/api/analyze", // ✅ Node backend route
+        "http://localhost:5000/api/analysis/upload",
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        { timeout: 120000 }
       );
 
       console.log("✅ Analysis success:", response.data);
